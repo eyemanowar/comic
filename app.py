@@ -23,17 +23,55 @@ prefs = {"download.default_directory" : "D:\\new week"}
 chromeOptions.add_experimental_option("prefs",prefs)
 driver = webdriver.Chrome(chrome_options=chromeOptions)
 
+def getMatcher(str):
+       return re.search("(.*?(\s\d{4})?(?=\s\d{1,4}))|(.*?(?=,\s20\d{2}-\d{2}-\d{2})|(.*?(?=\s#\d\d?\d?)))", str)
+
+def yearCheck(str):
+	return re.search("\d{4}", str)
+
+def getImage(str):
+	imageURL = urllib2.urlopen(str)
+	getHTML = imageURL.read()
+	strn_html = "".join(getHTML)
+	loc = re.search('/fileName.*\=(small)', str_html)
+	head = re.search('http://www\d{1,4}.*com', str_html)
+	return head.group() + loc.group()
+
+def downloadComic(str):
+	m = getMatcher(str)
+	if (m and m.group() in folders.keys()):
+		year = yearCheck(str)
+		if(year and year.group() > "2013"):
+			dst_exists = os.path.isfile(os.path.join(folders[m.group()], str))
+			if not dst_exists:
+				dwnld_exists = os.path.isfile(os.path.join("D:\\new week", str))
+				if not dwnld_exists:
+					if str.find("Beige") == -1:
+						if str.find("omegaguy edit") == -1:
+							if str.find("resized") == -1:
+								if str.find("c2c") == -1:
+									print m.group()
+									print str
+									print url
+									# print str
+									# print dl
+									# print year.group()
+									driver.get(url)
+									button = driver.find_element_by_id('dlbutton')
+									button.click()
+
 folders = {}
 root = "G:\Downloads\comic"
 def buildDatabase(path):
 	for dirpath1, dirnames1, filenames1 in os.walk(os.path.join(root, path)):
 		for r in filenames1:
-			m1 = re.search("(.*?(?=\s\d{1,4}))|(.*?(?=,\s20\d{2}-\d{2}-\d{2})|(.*?(?=\s#\d\d?\d?)))", r)
+			m1 = getMatcher(r)
 			if(m1):
 				folders[m1.group(0)] = dirpath1
 				# print dirpath1, dirnames1, filenames1
 				# .*?(?=(\s\d{1,4}.\d)?\s(\(.*?\)\s)?\(20\d{2}\))
 				# .*?(?=\s\d{1,4})
+
 
 buildDatabase("Valiant Comics")	
 buildDatabase("Boom! Studios")
@@ -61,7 +99,7 @@ response1 = urllib2.urlopen(new)
 thread = response1.read()
 chan = h.fromstring(thread)
 com = chan.xpath("//*/article/div/div[@class='text']/a/@href")
-print com
+# print com
 for url in com:
 	if url.find("zippyshare.com/v/") != -1:
 		# print url
@@ -70,39 +108,14 @@ for url in com:
 		name = h.fromstring(flee)
 		op = name.xpath("//*/div[@id='lrbox']/div[@class='left']/font[3]/text()")
 		dl = name.xpath("//*/div[@id='lrbox']/div[@class='right']/div/a/@id")
+		new_com = op[0]
 		try:
-			m = re.search("(.*?(?=\s\d{2,3}))|(.*?(?=,\s20\d{2}-\d{2}-\d{2})|(.*?(?=\s#\d\d?\d?)))", op[0])
-			if (m):
-				if m.group() in folders.keys():
-					year = re.search("\d{4}", op[0])
-					if (year):
-						if year.group() > "2013":
-							dst_exists = os.path.isfile(os.path.join(folders[m.group()], op[0]))
-							if not dst_exists:
-								dwnld_exist = os.path.isfile(os.path.join("D:\\new week", op[0]))
-								if dwnld_exist == False:
-									if op[0].find("Beige") != -1:
-										pass
-									else:
-										if op[0].find("omegaguy edit") != -1:
-											# print "no dwnld"
-											# print op[0]
-											pass
-										else:
-											if op[0].find("resized") != -1:
-												pass
-											else:
-												if op[0].find("c2c") != -1:
-													pass
-												else:
-													print m.group()
-													print op[0]
-													print url
-												# print op[0]
-													# print dl
-													# print year.group()
-													driver.get(url)
-													button = driver.find_element_by_id('dlbutton')
-													button.click()
+			downloadComic(new_com)
+
 		except IndexError: 
-			print "not ok", url, "not ok"
+			pic = getImage(url)
+			urllib.urlretrieve(pic, "filename.png")
+			img = Image.open("filename.png")
+			img = img.resize((1200, 50), Image.ANTIALIAS)
+			imageCom = image_to_string(img)
+			downloadComic(imageCom)
