@@ -6,6 +6,9 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
+import PIL
+from PIL import Image
+from pytesser import *
 
 # driver = webdriver.PhantomJS('C:\phantomjs-2.0.0-windows\phantomjs.exe')
 # fp = webdriver.FirefoxProfile()
@@ -23,37 +26,37 @@ prefs = {"download.default_directory" : "D:\\new week"}
 chromeOptions.add_experimental_option("prefs",prefs)
 driver = webdriver.Chrome(chrome_options=chromeOptions)
 
-def getMatcher(str):
-       return re.search("(.*?(\s\d{4})?(?=\s\d{1,4}))|(.*?(?=,\s20\d{2}-\d{2}-\d{2})|(.*?(?=\s#\d\d?\d?)))", str)
+def getMatcher(strn):
+       return re.search("(.*?(\s\d{4})?(?=\s\d{1,4}))|(.*?(?=,\s20\d{2}-\d{2}-\d{2})|(.*?(?=\s#\d\d?\d?)))", strn)
 
-def yearCheck(str):
-	return re.search("\d{4}", str)
+def yearCheck(strn):
+	return re.search("\d{4}", strn)
 
-def getImage(str):
-	imageURL = urllib2.urlopen(str)
+def getImage(strn):
+	imageURL = urllib2.urlopen(strn)
 	getHTML = imageURL.read()
 	strn_html = "".join(getHTML)
-	loc = re.search('/fileName.*\=(small)', str_html)
-	head = re.search('http://www\d{1,4}.*com', str_html)
+	loc = re.search('/fileName.*\=(small)', strn_html)
+	head = re.search('http://www\d{1,4}.*com', strn_html)
 	return head.group() + loc.group()
 
-def downloadComic(str):
-	m = getMatcher(str)
+def downloadComic(strn):
+	m = getMatcher(strn)
 	if not (m and m.group() in folders.keys()):
-       return
-	year = yearCheck(str)
+		return
+	year = yearCheck(strn)
 	if not (year and year.group() > "2013"):
-       return
-	dst_exists = os.path.isfile(os.path.join(folders[m.group()], str))
+		return
+	dst_exists = os.path.isfile(os.path.join(folders[m.group()], strn))
 	if dst_exists:
-      return
-	dwnld_exists = os.path.isfile(os.path.join("D:\\new week", str))
+		return
+	dwnld_exists = os.path.isfile(os.path.join("D:\\new week", strn))
 	if dwnld_exists:
-      return
-	if re.search("(Beige)|(omegaguy edit)|(resized)|(c2c)|(Resized)", str):
+		return
+	if re.search("(Beige)|(omegaguy edit)|(resized)|(c2c)|(Resized)", strn):
 		return
 	print m.group()
-	print str
+	print strn
 	print url
 	# print str
 	# print dl
@@ -110,8 +113,8 @@ for url in com:
 		name = h.fromstring(flee)
 		op = name.xpath("//*/div[@id='lrbox']/div[@class='left']/font[3]/text()")
 		dl = name.xpath("//*/div[@id='lrbox']/div[@class='right']/div/a/@id")
-		new_com = op[0]
 		try:
+			new_com = op[0]
 			downloadComic(new_com)
 
 		except IndexError: 
