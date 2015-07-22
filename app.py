@@ -39,26 +39,28 @@ def getImage(str):
 
 def downloadComic(str):
 	m = getMatcher(str)
-	if (m and m.group() in folders.keys()):
-		year = yearCheck(str)
-		if(year and year.group() > "2013"):
-			dst_exists = os.path.isfile(os.path.join(folders[m.group()], str))
-			if not dst_exists:
-				dwnld_exists = os.path.isfile(os.path.join("D:\\new week", str))
-				if not dwnld_exists:
-					if str.find("Beige") == -1:
-						if str.find("omegaguy edit") == -1:
-							if str.find("resized") == -1:
-								if str.find("c2c") == -1:
-									print m.group()
-									print str
-									print url
-									# print str
-									# print dl
-									# print year.group()
-									driver.get(url)
-									button = driver.find_element_by_id('dlbutton')
-									button.click()
+	if not (m and m.group() in folders.keys()):
+       return
+	year = yearCheck(str)
+	if not (year and year.group() > "2013"):
+       return
+	dst_exists = os.path.isfile(os.path.join(folders[m.group()], str))
+	if dst_exists:
+      return
+	dwnld_exists = os.path.isfile(os.path.join("D:\\new week", str))
+	if dwnld_exists:
+      return
+	if re.search("(Beige)|(omegaguy edit)|(resized)|(c2c)|(Resized)", str):
+		return
+	print m.group()
+	print str
+	print url
+	# print str
+	# print dl
+	# print year.group()
+	driver.get(url)
+	button = driver.find_element_by_id('dlbutton')
+	button.click()
 
 folders = {}
 root = "G:\Downloads\comic"
